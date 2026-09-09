@@ -1,0 +1,48 @@
+# Emacs packages
+/elpa/
+
+# Package metadata / generated state
+/package-quickstart.el
+/package-quickstart.elc
+
+# Native compilation
+/eln-cache/
+
+# Emacs caches
+/.cache/
+/cache/
+/var/
+
+# Tree-sitter compiled grammars
+/tree-sitter/
+
+# Persistent undo
+/undo/
+
+# Generated customization
+/custom.el
+
+# Recent/history/session state
+/recentf
+/savehist
+/bookmarks
+/places
+
+# Server/socket state
+/server/
+
+# Desktop/session state
+/.emacs.desktop
+/.emacs.desktop.lock
+
+# Temporary / backup files
+*~
+\#*\#
+.\#*
+
+# macOS
+.DS_Store
+
+# Byte compiled config
+/lisp/*.elc
+/themes/*.elc
