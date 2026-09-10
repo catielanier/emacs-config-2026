@@ -38,7 +38,10 @@
 
 (require 'catie-languages)
 (require 'catie-lsp)
+
 (require 'catie-frameworks)
+(require 'catie-backends)
+
 (require 'catie-tailwind)
 (require 'catie-linting)
 (require 'catie-formatting)
