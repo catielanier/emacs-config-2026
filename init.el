@@ -48,6 +48,8 @@
 (require 'catie-linting)
 (require 'catie-formatting)
 
+(require 'catie-copilot)
+
 (require 'catie-search)
 
 (require 'catie-projects)
