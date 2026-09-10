@@ -57,6 +57,7 @@
   "f"   '(:ignore t :which-key "file")
   "f f" '(find-file :which-key "find file")
   "f r" '(consult-recent-file :which-key "recent files")
+  "f s" '(save-buffer :which-key "save file")
 
   "s"   '(:ignore t :which-key "search")
   "s s" '(consult-line :which-key "search buffer"))

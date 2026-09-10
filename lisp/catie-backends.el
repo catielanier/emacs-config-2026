@@ -1,6 +1,7 @@
 ;;; catie-backends.el --- Go, Python and PHP support -*- lexical-binding: t; -*-
 
 (require 'lsp-mode)
+(require 'subr-x)
 
 
 ;; ---------------------------------------------------------------------------
@@ -45,6 +46,72 @@
 (require 'lsp-go)
 
 
+(defun catie/go-env (name)
+  "Return the value of Go environment variable NAME."
+
+  (when (executable-find "go")
+
+    (with-temp-buffer
+
+      (when
+          (zerop
+           (call-process
+            "go"
+            nil
+            t
+            nil
+            "env"
+            name))
+
+        (string-trim
+         (buffer-string))))))
+
+
+(defun catie/go-bin-directory ()
+  "Return the directory where `go install' places executables."
+
+  (let ((gobin
+         (catie/go-env "GOBIN")))
+
+    (if
+        (and gobin
+             (not
+              (string-empty-p gobin)))
+
+        gobin
+
+      (when-let ((gopath
+                  (catie/go-env "GOPATH")))
+
+        (expand-file-name
+         "bin"
+         gopath)))))
+
+
+(defun catie/gopls-path ()
+  "Return the expected absolute path to gopls."
+
+  (when-let ((bin
+              (catie/go-bin-directory)))
+
+    (expand-file-name
+     "gopls"
+     bin)))
+
+
+;; lsp-mode installs gopls using:
+;;
+;;     go install golang.org/x/tools/gopls@latest
+;;
+;; That writes into GOBIN or GOPATH/bin, which is not guaranteed to be in
+;; Emacs' exec-path.  Point lsp-mode directly at the exact installation path.
+(when-let ((gopls
+            (catie/gopls-path)))
+
+  (setq lsp-go-gopls-server-path
+        gopls))
+
+
 ;; Standard gofmt behavior, not gofumpt.
 (setq lsp-go-use-gofumpt nil)
 
@@ -68,15 +135,13 @@
 (defun catie/go-setup ()
   "Configure a Go buffer."
 
-  ;; Do not let some unrelated Go server become the primary client.
   (setq-local lsp-enabled-clients
               '(gopls))
 
-  ;; gofmt convention.
+  ;; Go convention.
   (setq-local indent-tabs-mode
               t)
 
-  ;; Format only this Go buffer on save.
   (add-hook
    'before-save-hook
    #'catie/go-format-before-save
@@ -100,26 +165,21 @@
 ;; Python
 ;; ===========================================================================
 
-;; Pyright's Emacs client is maintained separately from lsp-mode itself.
 (use-package lsp-pyright
   :ensure t
   :after lsp-mode
 
   :custom
 
-  ;; Use upstream Pyright.
   (lsp-pyright-langserver-command
    "pyright")
 
-  ;; Repositories can override this with pyrightconfig.json/pyproject.toml.
   (lsp-pyright-type-checking-mode
    "standard")
 
-  ;; Don't wastefully analyze every unopened file unless the project asks.
   (lsp-pyright-diagnostic-mode
    "openFilesOnly")
 
-  ;; Yes please.
   (lsp-pyright-auto-import-completions
    t)
 
@@ -130,7 +190,6 @@
 (defun catie/python-setup ()
   "Configure a Python buffer."
 
-  ;; Ensure the Pyright client has actually been loaded before `lsp'.
   (require 'lsp-pyright)
 
   (setq-local lsp-enabled-clients
@@ -157,24 +216,16 @@
 (require 'lsp-php)
 
 
-;; Intelephense has its own formatter opinions.
-;;
-;; We explicitly disable them because PHP formatting must eventually come
-;; from the repository's chosen formatter rather than Emacs deciding that
-;; everything should be PSR-12.
 (setq lsp-intelephense-format-enable nil)
 
-;; Useful IDE behavior.
 (setq lsp-intelephense-completion-insert-use-declaration t)
 
-;; Keep telemetry off.
 (setq lsp-intelephense-telemetry-enabled nil)
 
 
 (defun catie/php-setup ()
   "Configure a PHP buffer."
 
-  ;; `iph' is lsp-mode's server ID for Intelephense.
   (setq-local lsp-enabled-clients
               '(iph))
 

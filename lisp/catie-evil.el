@@ -48,6 +48,25 @@
    (kbd "g T")
    #'tab-previous))
 
+;; ---------------------------------------------------------------------------
+;; Quiet Ex prompt
+;; ---------------------------------------------------------------------------
+
+(defun catie/evil-ex-quiet-feedback (original message &rest args)
+  "Suppress Evil's unnecessary live Ex command commentary."
+
+  (unless
+      (member message
+              '("Incomplete command"
+                "Unknown command"))
+
+    (apply original message args)))
+
+
+(advice-add
+ 'evil-ex-echo
+ :around
+ #'catie/evil-ex-quiet-feedback)
 
 ;; ---------------------------------------------------------------------------
 ;; Evil extensions
