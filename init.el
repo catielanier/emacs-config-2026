@@ -38,6 +38,7 @@
 
 (require 'catie-languages)
 (require 'catie-lsp)
+(require 'catie-tailwind)
 (require 'catie-linting)
 (require 'catie-formatting)
 
