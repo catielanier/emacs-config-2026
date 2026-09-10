@@ -38,6 +38,7 @@
 
 (require 'catie-languages)
 (require 'catie-lsp)
+(require 'catie-frameworks)
 (require 'catie-tailwind)
 (require 'catie-linting)
 (require 'catie-formatting)
@@ -57,7 +58,9 @@
   (require 'catie-macos))
 
  ((eq system-type 'gnu/linux)
-  (when (locate-library "catie-linux")
+  (when
+      (locate-library "catie-linux")
+
     (require 'catie-linux))))
 
 

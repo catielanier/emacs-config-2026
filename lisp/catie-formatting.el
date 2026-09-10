@@ -17,7 +17,8 @@
     css-ts-mode
     html-ts-mode
     yaml-ts-mode
-    markdown-mode)
+    markdown-mode
+    web-mode)
   "Major modes eligible for project-local Prettier.")
 
 
@@ -69,7 +70,8 @@
           "package.json"
           directory)))
 
-    (when (file-readable-p package-json)
+    (when
+        (file-readable-p package-json)
 
       (condition-case nil
 
@@ -104,10 +106,7 @@
 
 
 (defun catie/prettier-configured-p ()
-  "Return non-nil if this file has project-local Prettier configuration.
-
-Search upward from the current file, but never beyond the directory
-containing the project's local Prettier installation."
+  "Return non-nil if this file has project-local Prettier configuration."
 
   (when-let* ((file buffer-file-name)
               (root (catie/prettier-project-root)))
@@ -123,15 +122,17 @@ containing the project's local Prettier installation."
           found
           done)
 
-      (while (and directory
-                  (not found)
-                  (not done))
+      (while
+          (and directory
+               (not found)
+               (not done))
 
         (setq found
               (catie/directory-has-prettier-config-p
                directory))
 
-        (if (equal directory root)
+        (if
+            (equal directory root)
 
             (setq done t)
 
@@ -139,8 +140,10 @@ containing the project's local Prettier installation."
                  (file-name-directory
                   (directory-file-name directory))))
 
-            (if (or (null parent)
-                    (equal parent directory))
+            (if
+                (or
+                 (null parent)
+                 (equal parent directory))
 
                 (setq done t)
 
@@ -155,13 +158,12 @@ containing the project's local Prettier installation."
   (and
    buffer-file-name
 
-   (memq major-mode
-         catie/prettier-modes)
+   (memq
+    major-mode
+    catie/prettier-modes)
 
-   ;; Require the repository's own Prettier.
    (catie/prettier-project-root)
 
-   ;; Require repository configuration.
    (catie/prettier-configured-p)))
 
 
@@ -180,48 +182,50 @@ containing the project's local Prettier installation."
 
   :custom
 
-  ;; Format before save.
-  (prettier-prettify-on-save-flag t)
+  (prettier-prettify-on-save-flag
+   t)
 
-  ;; Let prettier.el preload its long-running Node process so saves don't
-  ;; pay Node startup cost every single time.
-  (prettier-pre-warm 'full)
+  (prettier-pre-warm
+   'full)
 
-  ;; The project's Prettier config is authoritative.
-  ;;
-  ;; prettier.el can sync indentation settings back into Emacs so that normal
-  ;; editing indentation agrees with what Prettier will eventually produce.
-  (prettier-mode-sync-config-flag t)
+  ;; Let the repository's Prettier configuration remain authoritative.
+  (prettier-mode-sync-config-flag
+   t)
 
-  ;; We explicitly do not use EditorConfig in this setup.
-  (prettier-editorconfig-flag nil)
+  ;; Explicitly do NOT use EditorConfig.
+  (prettier-editorconfig-flag
+   nil)
 
-  ;; Emacs 31's tsx-ts-mode isn't explicitly known to every version of
-  ;; prettier.el, so allow Prettier to infer the parser from the filename.
-  (prettier-infer-parser-flag t)
+  ;; Infer Svelte/Vue/etc. from the actual filename.
+  (prettier-infer-parser-flag
+   t)
 
-  ;; Give its diff algorithm enough time to preserve point, overlays and LSP
-  ;; decorations correctly rather than falling back to a coarse replacement.
-  (prettier-diff-timeout-seconds 0)
+  (prettier-diff-timeout-seconds
+   0)
 
-  ;; Don't add another giant modeline indicator.
-  (prettier-mode-lighter nil))
+  (prettier-mode-lighter
+   nil))
 
 
 ;; ---------------------------------------------------------------------------
-;; Enable Prettier only when the project opts into it
+;; Enable only when the project opts into Prettier
 ;; ---------------------------------------------------------------------------
 
 (defun catie/maybe-enable-prettier ()
   "Enable Prettier only for buffers whose project is configured for it."
 
-  (when (catie/prettier-eligible-p)
+  (when
+      (catie/prettier-eligible-p)
+
     (prettier-mode 1)))
 
 
 (dolist (mode catie/prettier-modes)
+
   (add-hook
-   (intern (format "%s-hook" mode))
+   (intern
+    (format "%s-hook" mode))
+
    #'catie/maybe-enable-prettier))
 
 
@@ -234,7 +238,9 @@ containing the project's local Prettier installation."
 
   (interactive)
 
-  (unless (catie/prettier-eligible-p)
+  (unless
+      (catie/prettier-eligible-p)
+
     (user-error
      "This file does not have project-local configured Prettier"))
 
@@ -249,15 +255,22 @@ containing the project's local Prettier installation."
   (message
    "Prettier: %s | local install: %s | project config: %s"
 
-   (if (bound-and-true-p prettier-mode)
+   (if
+       (bound-and-true-p prettier-mode)
+
        "enabled"
+
      "disabled")
 
-   (or (catie/prettier-project-root)
-       "none")
+   (or
+    (catie/prettier-project-root)
+    "none")
 
-   (if (catie/prettier-configured-p)
+   (if
+       (catie/prettier-configured-p)
+
        "yes"
+
      "no")))
 
 
