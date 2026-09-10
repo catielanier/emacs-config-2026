@@ -2,18 +2,49 @@
 
 
 ;; ---------------------------------------------------------------------------
+;; Safe startup
+;; ---------------------------------------------------------------------------
+
+(defun catie/copilot-server-installed-p ()
+  "Return non-nil when Copilot's language server is actually installed."
+
+  (and
+   ;; Don't explode during initial package installation.
+   (require 'copilot nil t)
+
+   (condition-case nil
+       (progn
+         (copilot-server-executable)
+         t)
+
+     (error nil))))
+
+
+(defun catie/maybe-enable-copilot ()
+  "Enable Copilot only when its language server exists.
+
+This prevents Copilot from breaking package compilation during a fresh
+Emacs bootstrap before `copilot-install-server' has been run."
+
+  (when
+      (catie/copilot-server-installed-p)
+
+    (copilot-mode 1)))
+
+
+;; ---------------------------------------------------------------------------
 ;; GitHub Copilot
 ;; ---------------------------------------------------------------------------
 
 (use-package copilot
   :ensure t
 
-  ;; Inline suggestions in programming buffers.
+  ;; Do NOT directly hook `copilot-mode' into prog-mode.
   ;;
-  ;; Current copilot.el already defaults to only triggering suggestions while
-  ;; Evil is in Insert state, which is exactly what we want.
+  ;; Package installation/byte compilation itself opens programming buffers.
+  ;; On a new machine that happens before the Copilot language server exists.
   :hook
-  (prog-mode . copilot-mode)
+  (prog-mode . catie/maybe-enable-copilot)
 
   :config
 
@@ -21,22 +52,33 @@
   ;; Acceptance keys
   ;; -------------------------------------------------------------------------
   ;;
-  ;; Match Catie's Neovim configuration exactly:
+  ;; Match Catie's Neovim setup:
   ;;
-  ;;   C-j  -> accept suggestion
-  ;;   F19  -> accept suggestion
+  ;;   C-j  -> accept whole suggestion
+  ;;   F19  -> accept whole suggestion
   ;;
-  ;; TAB, C-TAB and Space must NOT accept Copilot.
+  ;; TAB / C-TAB / Space do NOT accept Copilot.
 
-  ;; copilot.el ships these acceptance bindings by default.
-  ;; Remove them so Corfu / indentation / normal editor behavior keeps TAB.
-  (keymap-unset copilot-completion-map "<tab>")
-  (keymap-unset copilot-completion-map "TAB")
+  ;; Current copilot.el supplies TAB acceptance by default.
+  ;; Remove all of it.
+  (keymap-unset
+   copilot-completion-map
+   "<tab>")
 
-  (keymap-unset copilot-completion-map "C-<tab>")
-  (keymap-unset copilot-completion-map "C-TAB")
+  (keymap-unset
+   copilot-completion-map
+   "TAB")
 
-  ;; Our actual acceptance keys.
+  (keymap-unset
+   copilot-completion-map
+   "C-<tab>")
+
+  (keymap-unset
+   copilot-completion-map
+   "C-TAB")
+
+
+  ;; Our acceptance keys.
   (keymap-set
    copilot-completion-map
    "C-j"
@@ -51,11 +93,6 @@
   ;; -------------------------------------------------------------------------
   ;; Tree-sitter language IDs
   ;; -------------------------------------------------------------------------
-  ;;
-  ;; copilot.el normally derives the language ID from `major-mode'.
-  ;;
-  ;; Emacs' tree-sitter mode names don't always correspond directly to the
-  ;; language IDs expected by Copilot, so make those mappings explicit.
 
   (dolist
       (mapping
@@ -86,23 +123,16 @@
 ;; ---------------------------------------------------------------------------
 ;; Svelte / Vue
 ;; ---------------------------------------------------------------------------
-;;
-;; Both currently use `web-mode' in our configuration, so major-mode alone
-;; cannot tell Copilot which framework is being edited.
-;;
-;; Give each web-mode buffer the correct Copilot language ID based on its real
-;; filename.
 
 (defun catie/copilot-web-language ()
   "Set Copilot's web-mode language ID from the current filename."
 
   (when buffer-file-name
 
-    ;; Make this mapping buffer-local so a Vue buffer and Svelte buffer can
-    ;; coexist without changing one another.
     (setq-local
      copilot-major-mode-alist
-     (copy-tree copilot-major-mode-alist))
+     (copy-tree
+      copilot-major-mode-alist))
 
     (cond
 
@@ -142,22 +172,30 @@
 
 
 ;; ---------------------------------------------------------------------------
-;; Small controls
+;; Controls
 ;; ---------------------------------------------------------------------------
 
 (defun catie/copilot-status ()
-  "Show whether Copilot is enabled in the current buffer."
+  "Show Copilot status for the current buffer."
 
   (interactive)
 
   (message
-   "Copilot: %s"
+   "Copilot: %s | server: %s"
+
    (if
        (bound-and-true-p copilot-mode)
 
        "enabled"
 
-     "disabled")))
+     "disabled")
+
+   (if
+       (catie/copilot-server-installed-p)
+
+       "installed"
+
+     "not installed")))
 
 
 (catie/leader

@@ -72,6 +72,11 @@
   (vterm-kill-buffer-on-exit t)
   (vterm-max-scrollback 10000)
 
+  ;; Allow narrow terminal panes to report their REAL width.
+  ;;
+  ;; vterm defaults to 80 columns minimum, which causes TUIs such as
+  ;; Claude Code to render content beyond the visible edge of a sidebar.
+  (vterm-min-window-width 40)
   :config
 
   ;; vterm is a terminal, not an Evil editing buffer.
