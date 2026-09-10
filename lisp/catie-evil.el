@@ -48,6 +48,7 @@
    (kbd "g T")
    #'tab-previous))
 
+
 ;; ---------------------------------------------------------------------------
 ;; Quiet Ex prompt
 ;; ---------------------------------------------------------------------------
@@ -67,6 +68,7 @@
  'evil-ex-echo
  :around
  #'catie/evil-ex-quiet-feedback)
+
 
 ;; ---------------------------------------------------------------------------
 ;; Evil extensions
@@ -158,7 +160,6 @@
     '(execute-extended-command
       :which-key "command")
 
-
     ;; -----------------------------------------------------------------------
     ;; Windows
     ;; -----------------------------------------------------------------------
@@ -210,14 +211,36 @@
 
 
   ;; -------------------------------------------------------------------------
-  ;; Universal tab navigation
+  ;; Universal navigation
   ;; -------------------------------------------------------------------------
+  ;;
+  ;; Same controls everywhere:
+  ;;
+  ;;   C-c h/j/k/l   windows
+  ;;   C-c [ / ]     tabs
+  ;;
+  ;; Terminal modes may install these buffer-locally as well because their
+  ;; input maps take precedence over ordinary global bindings.
 
   (general-define-key
 
     :keymaps
     'override
 
+    ;; Window navigation
+    "C-c h"
+    #'windmove-left
+
+    "C-c j"
+    #'windmove-down
+
+    "C-c k"
+    #'windmove-up
+
+    "C-c l"
+    #'windmove-right
+
+    ;; Tab navigation
     "C-c ["
     #'tab-previous
 
@@ -269,27 +292,27 @@
   :config
 
   ;; Treemacs defines its own Evil state called `treemacs`.
-  ;; Keep the same directional window-navigation muscle memory as normal
-  ;; editing buffers.
+  ;; Keep exactly the same window/tab navigation muscle memory used
+  ;; everywhere else.
 
   (evil-define-key
    'treemacs
    treemacs-mode-map
 
    ;; ------------------------------------------------------------------------
-   ;; Window navigation
+   ;; Universal window navigation
    ;; ------------------------------------------------------------------------
 
-   (kbd "C-w h")
+   (kbd "C-c h")
    #'windmove-left
 
-   (kbd "C-w j")
+   (kbd "C-c j")
    #'windmove-down
 
-   (kbd "C-w k")
+   (kbd "C-c k")
    #'windmove-up
 
-   (kbd "C-w l")
+   (kbd "C-c l")
    #'windmove-right
 
 
@@ -317,7 +340,7 @@
 
 
    ;; ------------------------------------------------------------------------
-   ;; Universal tab navigation from Treemacs
+   ;; Universal tab navigation
    ;; ------------------------------------------------------------------------
 
    (kbd "C-c [")
@@ -333,7 +356,7 @@
 
 (with-eval-after-load 'catie-projects
 
-  ;; `catie-project-home-mode` derives from special-mode, which normally starts
+  ;; `catie-project-home-mode' derives from special-mode, which normally starts
   ;; in Emacs state according to our configuration above.
   ;;
   ;; The project dashboard is part of the editing interface, so give it normal
