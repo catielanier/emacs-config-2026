@@ -24,7 +24,9 @@
 
 (add-to-list
  'load-path
- (expand-file-name "lisp" user-emacs-directory))
+ (expand-file-name
+  "lisp"
+  user-emacs-directory))
 
 
 ;; ---------------------------------------------------------------------------
@@ -46,7 +48,11 @@
 (require 'catie-linting)
 (require 'catie-formatting)
 
+(require 'catie-search)
+
 (require 'catie-projects)
+(require 'catie-testing)
+
 (require 'catie-git)
 (require 'catie-terminal)
 
