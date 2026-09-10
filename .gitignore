@@ -1,48 +1,78 @@
-# Emacs packages
-/elpa/
+# ---------------------------------------------------------------------------
+# Emacs packages / generated code
+# ---------------------------------------------------------------------------
 
-# Package metadata / generated state
+/elpa/
+/eln-cache/
+/tree-sitter/
+
 /package-quickstart.el
 /package-quickstart.elc
 
-# Native compilation
-/eln-cache/
+*.elc
 
-# Emacs caches
+
+# ---------------------------------------------------------------------------
+# Emacs caches / local state
+# ---------------------------------------------------------------------------
+
 /.cache/
 /cache/
 /var/
 
-# Tree-sitter compiled grammars
-/tree-sitter/
-
-# Persistent undo
-/undo/
-
-# Generated customization
-/custom.el
-
-# Recent/history/session state
+/.lsp-session-v1
+/history
+/projects.eld
 /recentf
+/recentf.eld
 /savehist
 /bookmarks
 /places
+/tramp
 
-# Server/socket state
+/network-security.data
+
+
+# ---------------------------------------------------------------------------
+# Undo / sessions
+# ---------------------------------------------------------------------------
+
+/undo/
+/undo-fu-session/
+
 /server/
 
-# Desktop/session state
 /.emacs.desktop
 /.emacs.desktop.lock
 
-# Temporary / backup files
+
+# ---------------------------------------------------------------------------
+# Generated customization
+# ---------------------------------------------------------------------------
+
+/custom.el
+
+
+# ---------------------------------------------------------------------------
+# Package-specific state
+# ---------------------------------------------------------------------------
+
+/transient/
+/projectile-bookmarks.eld
+
+
+# ---------------------------------------------------------------------------
+# Temporary files
+# ---------------------------------------------------------------------------
+
 *~
 \#*\#
 .\#*
+*.lock
 
+
+# ---------------------------------------------------------------------------
 # macOS
-.DS_Store
+# ---------------------------------------------------------------------------
 
-# Byte compiled config
-/lisp/*.elc
-/themes/*.elc
+.DS_Store
