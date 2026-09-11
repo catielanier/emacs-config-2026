@@ -4,6 +4,64 @@
 
 
 ;; ---------------------------------------------------------------------------
+;; Ghostel
+;; ---------------------------------------------------------------------------
+;;
+;; Claude Code redraws extremely aggressively.  vterm is excellent for our
+;; normal terminal and LazyGit, but Claude's TUI can produce large redraw /
+;; reflow artifacts in a narrow editor pane.
+;;
+;; Ghostel uses libghostty's VT renderer and has explicit support for
+;; synchronized terminal output used by TUIs such as Claude Code.
+;;
+;; ONLY Claude uses Ghostel.  Our normal terminal stack remains vterm.
+
+(use-package ghostel
+  :ensure t
+
+  :config
+
+  ;; -------------------------------------------------------------------------
+  ;; Universal navigation inside Ghostel
+  ;; -------------------------------------------------------------------------
+  ;;
+  ;; Ghostel starts in semi-char mode.  C-c remains available to Emacs there,
+  ;; which makes it a natural match for our terminal navigation convention.
+
+  (define-key
+   ghostel-semi-char-mode-map
+   (kbd "C-c h")
+   #'windmove-left)
+
+  (define-key
+   ghostel-semi-char-mode-map
+   (kbd "C-c j")
+   #'windmove-down)
+
+  (define-key
+   ghostel-semi-char-mode-map
+   (kbd "C-c k")
+   #'windmove-up)
+
+  (define-key
+   ghostel-semi-char-mode-map
+   (kbd "C-c l")
+   #'windmove-right)
+
+
+  ;; Emacs tabs.
+  (define-key
+   ghostel-semi-char-mode-map
+   (kbd "C-c [")
+   #'tab-previous)
+
+  (define-key
+   ghostel-semi-char-mode-map
+   (kbd "C-c ]")
+   #'tab-next))
+
+
+;; ---------------------------------------------------------------------------
 ;; Claude Code IDE
 ;; ---------------------------------------------------------------------------
 
@@ -28,51 +86,32 @@
   ;; Terminal
   ;; -------------------------------------------------------------------------
 
-  ;; Claude Code is a terminal application.
+  ;; Claude gets Ghostel.
   ;;
-  ;; vterm is already our known-good terminal backend.
+  ;; vterm remains our backend everywhere else.
   (setq claude-code-ide-terminal-backend
-        'vterm)
+        'ghostel)
 
-  ;; We're intentionally using vterm.
+  ;; We're choosing the recommended backend deliberately.
   (setq claude-code-ide-show-backend-recommendation
         nil)
-
-  ;; Let Claude use its flicker-free terminal rendering mode.
-  (setq claude-code-ide-no-flicker
-        t)
-
-  ;; Keep the package's vterm optimizations enabled.
-  (setq claude-code-ide-vterm-anti-flicker
-        t)
-
-  (setq claude-code-ide-vterm-render-delay
-        0.005)
-
-  (setq claude-code-ide-prevent-reflow-glitch
-        t)
 
 
   ;; -------------------------------------------------------------------------
   ;; Window layout
   ;; -------------------------------------------------------------------------
   ;;
-  ;; IMPORTANT:
+  ;; Claude is a normal window in the main editor area.
   ;;
-  ;; Claude is NOT a side window.
-  ;;
-  ;; Treemacs owns the actual right side of the frame.  Claude instead lives
-  ;; in the rightmost part of the normal editor area:
+  ;; Treemacs remains the actual right-side window:
   ;;
   ;;     editor | Claude | Treemacs
   ;;
-  ;; That means Treemacs can disappear/reappear and will always remain
-  ;; farther right than Claude.
+  ;; Therefore Treemacs remains rightmost regardless of opening order.
 
   (setq claude-code-ide-use-side-window
         nil)
 
-  ;; The package still consults this for some internal behavior.
   (setq claude-code-ide-window-side
         'right)
 
@@ -96,7 +135,7 @@
   (setq claude-code-ide-show-claude-window-in-ediff
         t)
 
-  ;; Claude gets the useful IDE tools, but not arbitrary Elisp execution.
+  ;; No arbitrary Elisp evaluation from Claude.
   (setq claude-code-ide-enable-execute-code
         nil)
 
@@ -107,18 +146,8 @@
 
 
   ;; -------------------------------------------------------------------------
-  ;; Display Claude immediately LEFT of Treemacs
+  ;; Display Claude immediately left of Treemacs
   ;; -------------------------------------------------------------------------
-  ;;
-  ;; `rightmost' means the right edge of the frame's MAIN window area.
-  ;;
-  ;; Emacs side windows such as Treemacs live outside that main area, so:
-  ;;
-  ;;     main editor area           side window
-  ;;
-  ;;     editor | Claude          | Treemacs
-  ;;
-  ;; Opening Treemacs afterward still places it beyond Claude.
 
   (add-to-list
    'display-buffer-alist
@@ -127,38 +156,28 @@
 
      (display-buffer-in-direction)
 
+     ;; Right edge of the MAIN editor area.
+     ;;
+     ;; Treemacs is a side window outside that area and therefore remains
+     ;; farther right.
      (direction . rightmost)
 
-     ;; Wider than the previous 64-column experiment, but still leaves plenty
-     ;; of room for the editor on a normal development terminal.
+     ;; Enough room for Claude's TUI while retaining a useful editor pane.
      (window-width . 72)
 
-     ;; Try to preserve Claude's width while editor splits come and go.
      (preserve-size . (t . nil))))
 
 
   ;; -------------------------------------------------------------------------
-  ;; Terminal navigation
+  ;; Claude-specific Ghostel navigation
   ;; -------------------------------------------------------------------------
-  ;;
-  ;; claude-code-ide adds its own local terminal bindings after creating its
-  ;; vterm.  Re-assert our normal terminal navigation afterward so Claude
-  ;; behaves exactly like the other terminal applications in this config.
 
-  (defun catie/claude-terminal-navigation (&rest _)
-    "Install Catie's terminal navigation in a Claude vterm."
+  (defun catie/claude-ghostel-navigation (&rest _)
+    "Apply Catie's terminal navigation to Claude's Ghostel buffer."
 
     (when
-        (derived-mode-p 'vterm-mode)
+        (derived-mode-p 'ghostel-mode)
 
-      ;; Claude is a terminal, not a normal Evil editing buffer.
-      (when
-          (featurep 'evil)
-
-        (evil-emacs-state))
-
-
-      ;; Window navigation.
       (local-set-key
        (kbd "C-c h")
        #'windmove-left)
@@ -175,8 +194,6 @@
        (kbd "C-c l")
        #'windmove-right)
 
-
-      ;; Emacs tab navigation.
       (local-set-key
        (kbd "C-c [")
        #'tab-previous)
@@ -185,31 +202,23 @@
        (kbd "C-c ]")
        #'tab-next)
 
-
-      ;; Terminal copy/navigation mode.
-      (local-set-key
-       (kbd "C-c v")
-       #'vterm-copy-mode)
-
-
-      ;; Same concept as C-c t in our normal terminal:
-      ;; hide the terminal-like panel we're currently using.
+      ;; Hide/show Claude from inside its terminal.
       (local-set-key
        (kbd "C-c t")
        #'catie/claude-toggle)))
 
 
-  ;; Upstream calls this after constructing each Claude terminal.
-  ;; Install our navigation AFTER its terminal-specific bindings.
+  ;; claude-code-ide sets up backend-specific terminal bindings after creating
+  ;; the terminal.  Re-assert ours afterward.
   (unless
       (advice-member-p
-       #'catie/claude-terminal-navigation
+       #'catie/claude-ghostel-navigation
        'claude-code-ide--setup-terminal-keybindings)
 
     (advice-add
      'claude-code-ide--setup-terminal-keybindings
      :after
-     #'catie/claude-terminal-navigation)))
+     #'catie/claude-ghostel-navigation)))
 
 
 ;; ---------------------------------------------------------------------------
